@@ -8,4 +8,20 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          supabase: ['@supabase/supabase-js'],
+          gemini: ['@google/generative-ai']
+        }
+      }
+    }
+  },
+  define: {
+    // Ensure environment variables are properly handled
+    'process.env': {}
+  }
 });

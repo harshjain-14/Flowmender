@@ -97,6 +97,7 @@ BUSINESS LOGIC FOCUS:
   static initialize() {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
+      console.error('Gemini API key not found. Please check your environment variables.');
       throw new Error('Gemini API key not found. Please check your environment variables.');
     }
     
