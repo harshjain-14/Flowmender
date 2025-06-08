@@ -37,6 +37,31 @@ function App() {
   const [showAnalysisConfirm, setShowAnalysisConfirm] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [currentView, setCurrentView] = useState<'analyze' | 'history'>('analyze')
+  const [emailVerificationMessage, setEmailVerificationMessage] = useState<string | null>(null)
+
+  // Handle email verification success
+  useEffect(() => {
+    const handleAuthStateChange = () => {
+      const urlParams = new URLSearchParams(window.location.search)
+      const type = urlParams.get('type')
+      const accessToken = urlParams.get('access_token')
+      
+      if (type === 'signup' && accessToken) {
+        // Clear URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname)
+        
+        // Show success message
+        setEmailVerificationMessage('Email verified successfully! Welcome to FlowMender.')
+        
+        // Clear message after 5 seconds
+        setTimeout(() => {
+          setEmailVerificationMessage(null)
+        }, 5000)
+      }
+    }
+
+    handleAuthStateChange()
+  }, [])
 
   // Handle payment success redirect
   useEffect(() => {
@@ -208,7 +233,7 @@ function App() {
                   type: 'signup',
                   email: user.email!,
                   options: {
-                    emailRedirectTo: `${window.location.origin}/auth/callback`
+                    emailRedirectTo: `${window.location.origin}?type=signup`
                   }
                 })
                 if (error) {
@@ -562,6 +587,20 @@ function App() {
   // Main application for authenticated and verified users
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Email Verification Success Message */}
+      {emailVerificationMessage && (
+        <div className="bg-green-50 border-l-4 border-green-400 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <CheckCircle className="h-5 w-5 text-green-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-green-700">{emailVerificationMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

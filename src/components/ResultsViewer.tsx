@@ -126,89 +126,23 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
     }
   };
 
-  const getFrequencyIcon = (frequency?: string) => {
-    if (!frequency) return <Clock className="h-4 w-4" />;
-    
-    switch (frequency.toLowerCase()) {
-      case 'real-time':
-        return <Zap className="h-4 w-4 text-purple-600" />;
-      case 'daily':
-        return <RefreshCw className="h-4 w-4 text-blue-600" />;
-      case 'weekly':
-      case 'monthly':
-        return <Timer className="h-4 w-4 text-green-600" />;
-      case 'on-demand':
-      case 'triggered':
-        return <Play className="h-4 w-4 text-orange-600" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-600" />;
-    }
-  };
-
   const filteredEdgeCases = result.edgeCases.filter(edgeCase => {
     const severityMatch = selectedSeverity === 'all' || edgeCase.severity === selectedSeverity;
     const categoryMatch = selectedCategory === 'all' || edgeCase.category === selectedCategory;
     return severityMatch && categoryMatch;
   });
 
-  const renderEnhancedJourneyFlow = (journey: UserJourney) => {
+  const renderJourneyFlow = (journey: UserJourney) => {
     return (
       <div className="bg-gray-50 rounded-lg p-6 mt-4">
         <div className="flex items-center justify-between mb-6">
           <h4 className="font-medium text-gray-900 flex items-center">
             <Network className="h-5 w-5 mr-2 text-blue-600" />
-            Enhanced Business Flow Analysis
+            User Journey Flow
           </h4>
-          <div className="flex items-center space-x-2">
-            {journey.frequency && (
-              <div className="flex items-center px-3 py-1 bg-white rounded-full text-sm">
-                {getFrequencyIcon(journey.frequency)}
-                <span className="ml-1 font-medium">{journey.frequency}</span>
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* Flow Dependencies */}
-        {(journey.upstreamDependencies?.length || journey.parallelProcesses?.length) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {journey.upstreamDependencies && journey.upstreamDependencies.length > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h5 className="font-medium text-blue-900 mb-2 flex items-center">
-                  <ArrowRight className="h-4 w-4 mr-1" />
-                  Upstream Dependencies
-                </h5>
-                <ul className="text-sm text-blue-700 space-y-1">
-                  {journey.upstreamDependencies.map((dep, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="text-blue-400 mr-2">•</span>
-                      <span>{dep}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {journey.parallelProcesses && journey.parallelProcesses.length > 0 && (
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <h5 className="font-medium text-purple-900 mb-2 flex items-center">
-                  <GitBranch className="h-4 w-4 mr-1" />
-                  Parallel Processes
-                </h5>
-                <ul className="text-sm text-purple-700 space-y-1">
-                  {journey.parallelProcesses.map((process, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="text-purple-400 mr-2">•</span>
-                      <span>{process}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Enhanced Flow Steps */}
+        {/* Flow Steps */}
         <div className="space-y-4">
           {journey.steps.map((step, index) => (
             <div key={step.id} className="flex items-start">
@@ -234,65 +168,6 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
                   <span className="font-medium">Expected: </span>
                   <span className="ml-1">{step.expectedOutcome}</span>
                 </div>
-
-                {/* Enhanced step details grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                  {step.timingConstraints && (
-                    <div className="flex items-start text-xs">
-                      <Timer className="h-3 w-3 text-orange-600 mr-1 mt-0.5" />
-                      <div>
-                        <span className="font-medium text-orange-700">Timing:</span>
-                        <span className="text-orange-600 ml-1">{step.timingConstraints}</span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {step.dataRequirements && (
-                    <div className="flex items-start text-xs">
-                      <Database className="h-3 w-3 text-purple-600 mr-1 mt-0.5" />
-                      <div>
-                        <span className="font-medium text-purple-700">Data:</span>
-                        <span className="text-purple-600 ml-1">{step.dataRequirements}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Failure scenarios */}
-                {step.failureScenarios && step.failureScenarios.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
-                    <h6 className="font-medium text-red-900 mb-2 flex items-center">
-                      <AlertOctagon className="h-3 w-3 mr-1" />
-                      Potential Failure Scenarios
-                    </h6>
-                    <ul className="text-xs text-red-700 space-y-1">
-                      {step.failureScenarios.map((scenario, index) => (
-                        <li key={index} className="flex items-start">
-                          <span className="text-red-400 mr-1">•</span>
-                          <span>{scenario}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Monitoring points */}
-                {step.monitoringPoints && step.monitoringPoints.length > 0 && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-                    <h6 className="font-medium text-green-900 mb-2 flex items-center">
-                      <Activity className="h-3 w-3 mr-1" />
-                      Monitoring Points
-                    </h6>
-                    <ul className="text-xs text-green-700 space-y-1">
-                      {step.monitoringPoints.map((point, index) => (
-                        <li key={index} className="flex items-start">
-                          <span className="text-green-400 mr-1">•</span>
-                          <span>{point}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
                 
                 {step.dependencies.length > 0 && (
                   <div className="mt-3 text-xs text-gray-500">
@@ -309,17 +184,15 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
 
   const renderOverview = () => (
     <div className="space-y-6">
-      {/* Enhanced Summary Cards */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center">
             <Users className="h-8 w-8 text-blue-600 mr-3" />
             <div>
-              <p className="text-sm text-blue-600 font-medium">Business Journeys</p>
+              <p className="text-sm text-blue-600 font-medium">User Journeys</p>
               <p className="text-2xl font-bold text-blue-900">{result.summary.totalJourneys}</p>
-              <p className="text-xs text-blue-600">
-                {result.summary.totalJourneys >= 8 ? 'Comprehensive' : 'Needs expansion'}
-              </p>
+              <p className="text-xs text-blue-600">Core flows identified</p>
             </div>
           </div>
         </div>
@@ -330,7 +203,7 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
             <div>
               <p className="text-sm text-red-600 font-medium">Critical Issues</p>
               <p className="text-2xl font-bold text-red-900">{result.summary.criticalIssues}</p>
-              <p className="text-xs text-red-600">Business impact</p>
+              <p className="text-xs text-red-600">Require immediate attention</p>
             </div>
           </div>
         </div>
@@ -341,7 +214,7 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
             <div>
               <p className="text-sm text-yellow-600 font-medium">Total Issues</p>
               <p className="text-2xl font-bold text-yellow-900">{result.summary.totalEdgeCases}</p>
-              <p className="text-xs text-yellow-600">Operational gaps</p>
+              <p className="text-xs text-yellow-600">Implementation gaps</p>
             </div>
           </div>
         </div>
@@ -353,7 +226,7 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
               <p className="text-sm text-green-600 font-medium">Readiness Score</p>
               <p className="text-2xl font-bold text-green-900">{result.summary.coverageScore}%</p>
               <p className="text-xs text-green-600">
-                {result.summary.coverageScore >= 80 ? 'Production ready' : 'Needs improvement'}
+                {result.summary.coverageScore >= 80 ? 'Ready for development' : 'Needs improvement'}
               </p>
             </div>
           </div>
@@ -377,28 +250,9 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
         </div>
       )}
 
-      {/* Journey Coverage Analysis */}
+      {/* Critical Issues Preview */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Journey Coverage Analysis</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">{result.journeys.filter(j => j.priority === 'high').length}</div>
-            <div className="text-sm text-gray-600">High Priority Journeys</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-yellow-600 mb-2">{result.journeys.filter(j => j.userType.toLowerCase().includes('admin')).length}</div>
-            <div className="text-sm text-gray-600">Admin/Operational Flows</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">{result.journeys.filter(j => j.frequency && ['real-time', 'daily'].includes(j.frequency.toLowerCase())).length}</div>
-            <div className="text-sm text-gray-600">Real-time/Daily Processes</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Critical Business Issues */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Critical Business Issues</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Critical Issues Requiring Attention</h3>
         <div className="space-y-3">
           {result.edgeCases
             .filter(e => e.severity === 'critical')
@@ -418,19 +272,13 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
                       <span>Impact: {edgeCase.businessImpact}</span>
                     </div>
                   )}
-                  {edgeCase.operationalFrequency && (
-                    <div className="flex items-center text-xs text-red-600 mt-1">
-                      <Clock className="h-3 w-3 mr-1" />
-                      <span>Frequency: {edgeCase.operationalFrequency}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
           {result.edgeCases.filter(e => e.severity === 'critical').length === 0 && (
             <div className="text-center py-4 text-gray-500">
               <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
-              <p>No critical business issues identified</p>
+              <p>No critical issues identified - great job!</p>
             </div>
           )}
         </div>
@@ -452,12 +300,6 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
                   <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(journey.priority)}`}>
                     {journey.priority} priority
                   </span>
-                  {journey.frequency && (
-                    <div className="flex items-center text-xs text-gray-600">
-                      {getFrequencyIcon(journey.frequency)}
-                      <span className="ml-1">{journey.frequency}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -485,7 +327,7 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
             </div>
           )}
           
-          {expandedJourneys.has(journey.id) && renderEnhancedJourneyFlow(journey)}
+          {expandedJourneys.has(journey.id) && renderJourneyFlow(journey)}
         </div>
       ))}
     </div>
@@ -493,7 +335,7 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
 
   const renderIssues = () => (
     <div className="space-y-6">
-      {/* Enhanced Filters */}
+      {/* Filters */}
       <div className="bg-white border border-gray-200 rounded-lg p-4">
         <div className="flex items-center space-x-4">
           <Filter className="h-5 w-5 text-gray-500" />
@@ -521,7 +363,7 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
         </div>
       </div>
 
-      {/* Enhanced Issues List */}
+      {/* Issues List */}
       <div className="space-y-4">
         {filteredEdgeCases.map(edgeCase => (
           <div key={edgeCase.id} className={`border rounded-lg p-6 ${getSeverityColor(edgeCase.severity)}`}>
@@ -538,20 +380,13 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col items-end space-y-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  edgeCase.severity === 'critical' ? 'bg-red-100 text-red-800' :
-                  edgeCase.severity === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-blue-100 text-blue-800'
-                }`}>
-                  {edgeCase.severity.toUpperCase()}
-                </span>
-                {edgeCase.operationalFrequency && (
-                  <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-                    {edgeCase.operationalFrequency}
-                  </span>
-                )}
-              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                edgeCase.severity === 'critical' ? 'bg-red-100 text-red-800' :
+                edgeCase.severity === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-blue-100 text-blue-800'
+              }`}>
+                {edgeCase.severity.toUpperCase()}
+              </span>
             </div>
             
             <p className="text-gray-700 mb-4">{edgeCase.description}</p>
@@ -586,16 +421,6 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
                 </p>
               </div>
             )}
-
-            {edgeCase.detectionMethod && (
-              <div className="mb-4">
-                <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                  <Activity className="h-4 w-4 mr-1" />
-                  Detection Method
-                </h4>
-                <p className="text-sm text-gray-600">{edgeCase.detectionMethod}</p>
-              </div>
-            )}
             
             {edgeCase.questionsToResolve && edgeCase.questionsToResolve.length > 0 && (
               <div className="mb-4">
@@ -618,7 +443,7 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
               <div>
                 <h4 className="font-medium text-gray-900 mb-2 flex items-center">
                   <GitBranch className="h-4 w-4 mr-1" />
-                  Affected Business Journeys
+                  Affected User Journeys
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {edgeCase.affectedJourneys.map(journeyId => {
@@ -647,12 +472,12 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
-        <h2 className="text-2xl font-bold mb-2">Comprehensive Business Logic Analysis</h2>
+        <h2 className="text-2xl font-bold mb-2">PRD Analysis Results</h2>
         <p className="text-blue-100">
           Document: {result.documentName} • Analyzed: {result.analyzedAt.toLocaleDateString()}
         </p>
         <div className="mt-2 text-sm text-blue-100">
-          {result.summary.totalJourneys} journeys identified • {result.summary.totalEdgeCases} business issues found
+          {result.summary.totalJourneys} journeys identified • {result.summary.totalEdgeCases} issues found
         </div>
       </div>
 
@@ -660,9 +485,9 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({ result }) => {
       <div className="border-b border-gray-200">
         <nav className="flex space-x-8 px-6">
           {[
-            { id: 'overview', label: 'Business Overview', icon: CheckCircle },
-            { id: 'journeys', label: 'Business Journeys', icon: User },
-            { id: 'issues', label: 'Business Issues', icon: AlertTriangle }
+            { id: 'overview', label: 'Overview', icon: CheckCircle },
+            { id: 'journeys', label: 'User Journeys', icon: User },
+            { id: 'issues', label: 'Issues & Gaps', icon: AlertTriangle }
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
