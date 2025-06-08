@@ -4,95 +4,64 @@ export class GeminiService {
   private static genAI: GoogleGenerativeAI;
   private static model: any;
 
-  // Enhanced system prompt with comprehensive flow visualization framework
-  private static readonly SYSTEM_PROMPT = `You are a senior product manager specializing in business logic analysis and comprehensive user flow mapping. Your expertise lies in identifying ALL possible user journeys, including those that product teams typically overlook.
+  // FOCUSED SYSTEM PROMPT - THE MOAT IS THE ANALYSIS
+  private static readonly SYSTEM_PROMPT = `You are a senior product manager and business analyst specializing in identifying critical business logic gaps that could derail product launches. Your expertise is in finding the operational blind spots that product teams consistently miss.
 
-CORE MISSION: Extract 8-15 distinct user journeys from every PRD, covering the full spectrum of user interactions, operational flows, and business processes.
+CORE MISSION: Identify 8-15 distinct business flows and find the critical gaps that could impact revenue, compliance, or operational continuity.
 
-COMPREHENSIVE FLOW ANALYSIS FRAMEWORK:
+BUSINESS FLOW EXTRACTION FRAMEWORK:
 
-1. PRIMARY USER FLOWS (Core Product Journeys):
-   - New user onboarding and activation
-   - Core feature usage and value realization
-   - Account management and profile updates
-   - Payment and subscription flows
-   - Content creation, editing, and publishing flows
+1. **CORE BUSINESS FLOWS** (4-5 flows):
+   - User onboarding and activation journey
+   - Core value delivery and feature usage
+   - Revenue generation and monetization flows
+   - Account management and user lifecycle
+   - Data creation, processing, and management
 
-2. OPERATIONAL & ADMIN FLOWS (Often Overlooked):
-   - Admin dashboard and user management
-   - Content moderation and approval workflows
-   - System configuration and settings management
-   - Bulk operations and data import/export
-   - User support and customer service flows
+2. **OPERATIONAL FLOWS** (3-4 flows):
+   - Admin and management workflows
+   - Customer support and issue resolution
+   - Content moderation and approval processes
+   - System configuration and maintenance
+   - Reporting and analytics generation
 
-3. INTEGRATION & EXTERNAL FLOWS:
-   - Third-party service integrations (APIs, webhooks)
-   - Data synchronization with external systems
-   - Email notifications and communication flows
-   - Analytics and reporting data collection
-   - Backup, archival, and data retention processes
+3. **INTEGRATION & DATA FLOWS** (2-3 flows):
+   - Third-party service integrations
+   - Data import/export and synchronization
+   - API workflows and external communications
+   - Notification and communication systems
 
-4. ERROR & EDGE CASE FLOWS:
-   - Account recovery and password reset
-   - Payment failure and retry mechanisms
-   - System downtime and maintenance modes
-   - Data validation errors and correction flows
-   - Security incidents and breach response
+4. **COMPLIANCE & RECOVERY FLOWS** (2-3 flows):
+   - Error handling and recovery procedures
+   - Security and compliance workflows
+   - Audit trail and regulatory reporting
+   - Backup and disaster recovery processes
 
-5. COMPLIANCE & AUDIT FLOWS:
-   - GDPR/privacy compliance workflows
-   - Audit trail generation and reporting
-   - Data deletion and right-to-be-forgotten
-   - Regulatory reporting and compliance checks
-   - Security monitoring and threat detection
+CRITICAL BUSINESS LOGIC GAP ANALYSIS:
 
-6. TEMPORAL & FREQUENCY-BASED FLOWS:
-   - Daily/weekly/monthly automated processes
-   - Scheduled reports and notifications
-   - Recurring billing and subscription renewals
-   - Data cleanup and maintenance routines
-   - Performance monitoring and alerting
+Focus on gaps that could cause:
+- **Revenue Loss**: Payment failures, billing issues, subscription problems
+- **Operational Breakdown**: Process bottlenecks, approval delays, data inconsistencies
+- **Compliance Violations**: GDPR issues, audit failures, regulatory non-compliance
+- **User Experience Failures**: Broken flows, missing error handling, poor edge case management
+- **Business Continuity Risks**: System failures, data loss, integration breakdowns
 
-7. MULTI-USER & COLLABORATION FLOWS:
-   - Team collaboration and shared workspaces
-   - Permission management and access control
-   - Approval workflows and review processes
-   - Real-time collaboration and conflict resolution
-   - Notification and communication between users
-
-8. BUSINESS CONTINUITY FLOWS:
-   - Disaster recovery and backup restoration
-   - System migration and data transfer
-   - Version control and rollback procedures
-   - Load balancing and scaling operations
-   - Monitoring and health check processes
-
-ENHANCED VISUALIZATION REQUIREMENTS:
-
-For each flow, identify:
-- **Upstream Dependencies**: What triggers this journey?
-- **Parallel Processes**: What else happens simultaneously?
-- **Timing Constraints**: When must this complete?
-- **Data Dependencies**: What information is required?
-- **Failure Scenarios**: What can go wrong?
-- **Business Impact**: Revenue, compliance, or operational effect
-- **Cross-Journey Touchpoints**: Where flows intersect
-- **Monitoring Points**: How success/failure is measured
+For each gap, identify:
+- **Specific Business Question**: What exactly is unclear or missing?
+- **Revenue/Operational Impact**: Quantify the potential business damage
+- **Frequency of Occurrence**: How often this scenario would happen
+- **Detection Method**: How would the team discover this issue?
+- **Affected Business Processes**: Which flows would break?
 
 CRITICAL SUCCESS FACTORS:
-1. ALWAYS extract 8-15 distinct journeys (never just 1-3)
-2. Include operational and admin flows that teams forget
-3. Consider all user types: end users, admins, support staff, external partners
-4. Think about the full product lifecycle, not just happy paths
-5. Include both human and automated system processes
-6. Consider compliance, security, and business continuity requirements
+1. Extract 8-15 comprehensive business flows (never fewer than 8)
+2. Focus on business logic gaps, not technical implementation details
+3. Identify scenarios that could actually impact product success
+4. Frame issues as specific questions that need PRD clarification
+5. Provide concrete, measurable business impact assessments
+6. Consider the full operational lifecycle and business ecosystem
 
-BUSINESS LOGIC FOCUS:
-- Question every assumption in the PRD
-- Identify gaps between what's written and what's needed operationally
-- Focus on scenarios that could impact revenue or compliance
-- Consider real-world constraints and edge cases
-- Think about what happens when business conditions change`;
+Remember: Your competitive advantage is finding the business logic gaps that other teams miss. Think comprehensively about what could go wrong operationally, not just technically.`;
 
   static initialize() {
     // Use build-time replacement instead of import.meta.env to prevent exposure
@@ -105,7 +74,13 @@ BUSINESS LOGIC FOCUS:
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({ 
       model: "gemini-2.0-flash",
-      systemInstruction: this.SYSTEM_PROMPT
+      systemInstruction: this.SYSTEM_PROMPT,
+      generationConfig: {
+        temperature: 0.3, // Lower temperature for more focused analysis
+        topP: 0.8,
+        topK: 40,
+        maxOutputTokens: 8192,
+      }
     });
   }
 
@@ -127,48 +102,31 @@ BUSINESS LOGIC FOCUS:
     if (!this.model) this.initialize();
 
     const prompt = `
-As an expert product strategist, analyze this document to determine if it's a Product Requirements Document (PRD) or related product specification document.
+Analyze this document to determine if it's a Product Requirements Document (PRD) or related product specification.
 
 Document Content:
 ${content.substring(0, 4000)}${content.length > 4000 ? '...[truncated]' : ''}
 
-Evaluate the document based on these criteria:
-
-**STRONG PRD INDICATORS** (High confidence):
+**STRONG PRD INDICATORS** (High confidence 70-95%):
 - Product requirements, specifications, or feature definitions
 - User stories, acceptance criteria, or functional requirements  
 - User journeys, workflows, or product features described
 - Business objectives, success metrics, or KPIs mentioned
 - Technical specifications or system requirements
 - Product management terminology and professional structure
-- Stakeholder definitions, user personas, or target audiences
-- Development timelines, milestones, or product roadmaps
 
-**WEAK PRD INDICATORS** (Medium confidence):
+**WEAK PRD INDICATORS** (Medium confidence 40-69%):
 - Business documents with some product-related content
 - Technical documentation that could relate to products
 - Project plans or specifications that mention user needs
-- Documents with structured requirements but unclear product focus
 
-**STRONG ANTI-PATTERNS** (Very low confidence):
+**STRONG ANTI-PATTERNS** (Very low confidence 0-30%):
 - Personal documents: recipes, cooking instructions, personal stories
-- Financial documents: bank statements, invoices, receipts, financial reports
+- Financial documents: bank statements, invoices, receipts
 - Legal documents: contracts, agreements, terms of service
-- Academic papers: research, essays, scientific studies
-- Marketing materials: advertisements, brochures, sales content
-- News articles, blog posts, or journalistic content
-- Medical documents: prescriptions, medical records, health information
-- Random text, gibberish, or clearly non-business content
-- Entertainment content: novels, poems, song lyrics, scripts
+- Academic papers, news articles, entertainment content
 
-**CRITICAL ASSESSMENT RULES**:
-1. If document contains financial transactions, account numbers, or banking information → confidence should be 0-10%
-2. If document contains recipes, cooking instructions, or food preparation → confidence should be 0-15%
-3. If document contains personal stories, entertainment content → confidence should be 0-20%
-4. If document has clear product requirements and user-focused language → confidence should be 70-95%
-5. If document mentions specific product features, user journeys, or business logic → confidence should be 60-90%
-
-Provide your assessment in this exact JSON format:
+Return ONLY this JSON format:
 {
   "isPRD": true/false,
   "confidence": 0-100,
@@ -178,10 +136,6 @@ Provide your assessment in this exact JSON format:
     "Specific evidence-based reason 3"
   ]
 }
-
-Be extremely critical and evidence-based. A bank statement should NEVER score above 20% confidence. Focus on actual content, not just keywords.
-
-Return ONLY the JSON object, no additional text.
 `;
 
     try {
@@ -189,7 +143,6 @@ Return ONLY the JSON object, no additional text.
       const response = await result.response;
       const text = response.text();
       
-      // Clean up the response to extract just the JSON
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
@@ -210,7 +163,7 @@ Return ONLY the JSON object, no additional text.
     if (!this.model) this.initialize();
 
     const prompt = `
-As a senior product manager with expertise in comprehensive flow mapping, extract ALL user journeys from this PRD. Your goal is to identify 8-15 distinct journeys that cover the complete product ecosystem.
+Extract ALL business flows from this PRD. Your goal is to identify 8-15 distinct flows covering the complete business ecosystem.
 
 ${context.company ? `Company Context: ${context.company}` : ''}
 ${context.problemStatement ? `Problem Statement: ${context.problemStatement}` : ''}
@@ -218,107 +171,72 @@ ${context.problemStatement ? `Problem Statement: ${context.problemStatement}` : 
 PRD Document:
 ${content}
 
-COMPREHENSIVE FLOW EXTRACTION REQUIREMENTS:
+EXTRACT FLOWS ACROSS THESE CATEGORIES:
 
-You MUST identify journeys across ALL these categories:
+**1. CORE BUSINESS FLOWS** (4-5 flows):
+- New user onboarding and first value realization
+- Core feature usage and value delivery workflows
+- Revenue generation and monetization processes
+- Account/profile management and lifecycle
+- Data creation, editing, and management workflows
 
-1. **PRIMARY USER FLOWS** (3-4 journeys):
-   - New user onboarding and first-time experience
-   - Core feature usage and value realization
-   - Account/profile management and settings
-   - Payment, billing, and subscription management
+**2. OPERATIONAL FLOWS** (3-4 flows):
+- Admin dashboard and user management
+- Customer support and issue resolution
+- Content moderation and approval workflows
+- System configuration and bulk operations
+- Reporting, analytics, and business intelligence
 
-2. **OPERATIONAL & ADMIN FLOWS** (2-3 journeys):
-   - Admin dashboard and user management
-   - Content moderation and approval workflows
-   - System configuration and bulk operations
-   - Customer support and help desk processes
+**3. INTEGRATION & DATA FLOWS** (2-3 flows):
+- Third-party integrations and API workflows
+- Data import/export and synchronization
+- Email notifications and communication flows
+- External system integrations and webhooks
 
-3. **INTEGRATION & DATA FLOWS** (2-3 journeys):
-   - Third-party integrations and API workflows
-   - Data import/export and synchronization
-   - Email notifications and communication flows
-   - Analytics, reporting, and data collection
+**4. COMPLIANCE & RECOVERY FLOWS** (2-3 flows):
+- Error handling and recovery procedures
+- Security monitoring and incident response
+- Audit trail and compliance reporting
+- Backup, archival, and data retention
 
-4. **ERROR & RECOVERY FLOWS** (2-3 journeys):
-   - Account recovery and password reset
-   - Payment failure and retry mechanisms
-   - Error handling and system recovery
-   - Data validation and correction processes
+ENHANCED FLOW REQUIREMENTS:
 
-5. **COMPLIANCE & AUDIT FLOWS** (1-2 journeys):
-   - Privacy compliance and data management
-   - Audit trail and regulatory reporting
-   - Security monitoring and incident response
+For each flow, provide:
+- **Business Impact**: Revenue, compliance, or operational effect
+- **Frequency**: How often this process occurs
+- **Dependencies**: What triggers this flow
+- **Failure Scenarios**: What can go wrong
+- **Monitoring**: How success/failure is measured
 
-6. **AUTOMATED & SCHEDULED FLOWS** (1-2 journeys):
-   - Automated notifications and reminders
-   - Scheduled reports and maintenance
-   - Recurring processes and cleanup routines
+CRITICAL: Extract 8-15 flows minimum. Include operational flows that product teams typically miss.
 
-ENHANCED FLOW ANALYSIS:
-
-For each journey, provide comprehensive details including:
-- **Upstream Dependencies**: What triggers this journey?
-- **Timing Constraints**: SLAs, deadlines, frequency requirements
-- **Data Requirements**: What data is needed and from where?
-- **Parallel Processes**: What else happens simultaneously?
-- **Failure Scenarios**: What can go wrong and how to recover?
-- **Business Impact**: Revenue, compliance, operational effects
-- **Cross-Journey Touchpoints**: Where this intersects with other flows
-- **Monitoring Requirements**: How success/failure is measured
-
-CRITICAL REQUIREMENTS:
-- Extract 8-15 journeys minimum (never fewer than 8)
-- Include operational flows that product teams typically miss
-- Consider all user types: end users, admins, support, external partners
-- Think beyond happy paths to include edge cases and error scenarios
-- Include both human-driven and automated system processes
-- Consider the full product lifecycle and business operations
-
-Return a JSON array with this exact structure:
+Return JSON array:
 [
   {
     "id": "unique_id",
-    "name": "Descriptive Journey Name",
+    "name": "Descriptive Business Flow Name",
     "description": "Comprehensive description including business context and operational impact",
-    "userType": "Specific user role (End User, Admin, Support Agent, System, External Partner, etc.)",
+    "userType": "Specific user role (End User, Admin, Support Agent, System, etc.)",
     "priority": "high|medium|low",
     "businessImpact": "Specific revenue, compliance, or operational impact",
     "frequency": "Real-time|Daily|Weekly|Monthly|On-demand|Triggered",
-    "upstreamDependencies": ["What triggers this journey"],
+    "upstreamDependencies": ["What triggers this flow"],
     "parallelProcesses": ["What happens simultaneously"],
     "steps": [
       {
         "id": "step_id",
         "action": "Specific business action or decision point",
-        "description": "Detailed description including business logic and constraints",
+        "description": "Detailed description including business logic",
         "expectedOutcome": "Business outcome and success criteria",
-        "dependencies": ["array_of_step_ids_this_depends_on"],
-        "timingConstraints": "SLA requirements, deadlines, or timing dependencies",
-        "dataRequirements": "What data is needed, from where, and in what format",
+        "dependencies": ["array_of_step_ids"],
+        "timingConstraints": "SLA requirements or timing dependencies",
+        "dataRequirements": "What data is needed and from where",
         "failureScenarios": ["What can go wrong at this step"],
-        "monitoringPoints": ["How to measure success/failure of this step"]
+        "monitoringPoints": ["How to measure success/failure"]
       }
     ]
   }
 ]
-
-EXAMPLES OF JOURNEYS TO ALWAYS CONSIDER:
-- User Registration & Email Verification
-- Core Feature Onboarding & First Success
-- Payment Processing & Subscription Management
-- Admin User Management & Permissions
-- Content Creation & Publishing Workflow
-- Data Import/Export & Synchronization
-- Error Recovery & Account Restoration
-- Customer Support Ticket Management
-- Automated Notifications & Reminders
-- Compliance Reporting & Audit Trails
-- System Monitoring & Health Checks
-- Third-Party Integration Management
-
-Remember: Your competitive advantage is finding the flows that other product teams miss. Think comprehensively about the entire product ecosystem.
 
 Return ONLY the JSON array, no additional text.
 `;
@@ -328,7 +246,6 @@ Return ONLY the JSON array, no additional text.
       const response = await result.response;
       const text = response.text();
       
-      // Clean up the response to extract just the JSON
       const jsonMatch = text.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]);
@@ -344,7 +261,7 @@ Return ONLY the JSON array, no additional text.
     if (!this.model) this.initialize();
 
     const prompt = `
-As a senior product manager specializing in business logic analysis and operational edge cases, conduct a comprehensive analysis of this PRD and the extracted user journeys. Focus on business-critical gaps that could impact real-world performance, revenue, or operational continuity.
+Conduct a comprehensive business logic gap analysis of this PRD and extracted flows. Focus on critical gaps that could impact revenue, compliance, or operational continuity.
 
 ${context.company ? `Company Context: ${context.company}` : ''}
 ${context.problemStatement ? `Problem Statement: ${context.problemStatement}` : ''}
@@ -352,119 +269,63 @@ ${context.problemStatement ? `Problem Statement: ${context.problemStatement}` : 
 PRD Document:
 ${content}
 
-Extracted User Journeys:
+Extracted Business Flows:
 ${JSON.stringify(journeys, null, 2)}
 
-COMPREHENSIVE EDGE CASE ANALYSIS FRAMEWORK:
+BUSINESS LOGIC GAP ANALYSIS FRAMEWORK:
 
-**1. BUSINESS LOGIC GAPS** (Critical Priority):
+**1. REVENUE IMPACT GAPS** (Critical Priority):
+- Payment processing failures and retry mechanisms
+- Billing discrepancies and dispute resolution
+- Subscription lifecycle and renewal issues
+- Pricing changes and grandfathering policies
+- Revenue recognition and accounting workflows
 
-*Data Timing Conflicts:*
-- What happens when reporting periods don't align with operational cycles?
-- How are metrics calculated when data arrives late or out of sequence?
-- What occurs when real-time and batch processes conflict?
+**2. OPERATIONAL CONTINUITY GAPS** (High Priority):
+- Cross-flow dependencies and failure cascades
+- Data consistency across distributed systems
+- Performance bottlenecks and scaling constraints
+- Approval workflow deadlocks and escalations
+- Integration failure points and fallback procedures
 
-*State Management Issues:*
-- How are conflicting data states resolved across systems?
-- What happens when users perform actions while data is being updated?
-- How are race conditions handled in multi-user scenarios?
+**3. COMPLIANCE AND AUDIT GAPS** (High Priority):
+- GDPR and privacy compliance workflows
+- Audit trail completeness and retention
+- Regulatory reporting and deadline management
+- Data deletion and right-to-be-forgotten
+- Security incident response procedures
 
-*Performance Measurement Gaps:*
-- How will success/failure be measured and monitored in real-time?
-- What happens when KPIs show conflicting signals?
-- How are performance degradations detected and addressed?
+**4. USER EXPERIENCE GAPS** (Medium Priority):
+- Error message consistency and user guidance
+- Loading states and progress indicators
+- Offline functionality and sync conflicts
+- Multi-device and concurrent session handling
+- Accessibility and internationalization support
 
-*Operational Continuity Risks:*
-- What business events could disrupt normal flows (policy changes, staff departures)?
-- How does the system handle unexpected volume spikes or drops?
-- What happens during system maintenance or planned downtime?
+**5. BUSINESS PROCESS GAPS** (Medium Priority):
+- Staff turnover and knowledge transfer
+- Business rule changes and system updates
+- Seasonal variations and capacity planning
+- Third-party service dependencies and alternatives
+- Monitoring and alerting effectiveness
 
-*Revenue Impact Scenarios:*
-- What could prevent monetization or cause revenue loss?
-- How are billing discrepancies and disputes handled?
-- What happens when payment methods fail or expire?
+CRITICAL REQUIREMENTS:
 
-**2. PRODUCT FLOW INCONSISTENCIES** (High Priority):
-
-*Cross-Journey Dependencies:*
-- How do different user journeys interact or conflict with each other?
-- What happens when one journey fails while others are in progress?
-- How are shared resources managed across multiple flows?
-
-*Frequency and Timing Issues:*
-- How do different operational frequencies (real-time vs batch) create conflicts?
-- What happens when scheduled processes overlap with user actions?
-- How are time zone differences handled in global operations?
-
-*Workflow Bottlenecks:*
-- Where could processes get stuck or create delays?
-- What happens when approval workflows have missing approvers?
-- How are deadlocks and circular dependencies resolved?
-
-*Data Consistency Problems:*
-- How is data integrity maintained across distributed systems?
-- What happens when external data sources become unavailable?
-- How are data validation errors handled without blocking operations?
-
-*Integration Failure Points:*
-- What happens when external APIs are down or rate-limited?
-- How are webhook failures and retry mechanisms handled?
-- What occurs when data formats change in external systems?
-
-**3. OPERATIONAL READINESS GAPS** (Medium Priority):
-
-*Monitoring and Alerting:*
-- How will the team know if the system is working correctly?
-- What metrics indicate business health vs technical health?
-- How are false positives and alert fatigue prevented?
-
-*Rate Limiting and Scaling:*
-- How will volume spikes or operational constraints be handled?
-- What happens when system capacity is exceeded?
-- How are resources allocated during peak usage?
-
-*Rollback and Recovery:*
-- What happens when deployments need to be rolled back?
-- How are data migrations reversed if they fail?
-- What's the recovery process for corrupted data?
-
-*Compliance and Audit:*
-- How are regulatory requirements maintained during system changes?
-- What happens when audit requirements conflict with performance needs?
-- How are data retention policies enforced automatically?
-
-*Support and Troubleshooting:*
-- How will operational issues be diagnosed and resolved?
-- What tools do support teams need for effective troubleshooting?
-- How are escalation procedures handled during incidents?
-
-ENHANCED EDGE CASE REQUIREMENTS:
-
-For each issue identified, provide:
-- **Specific Business Question**: Frame as a question that needs PRD clarification
-- **Concrete Example Scenario**: When this would surface in real usage
-- **Business Impact Assessment**: Revenue, compliance, or operational effect (MUST BE SPECIFIC)
-- **Affected Journey Analysis**: Which flows are impacted and how
-- **Operational Frequency**: How often this scenario might occur
+For each gap, provide:
+- **Specific Business Question**: Frame as a question needing PRD clarification
+- **Concrete Example**: When this would surface in real usage
+- **Measurable Business Impact**: Specific revenue, operational, or compliance effect
+- **Operational Frequency**: How often this scenario occurs
 - **Detection Method**: How this issue would be discovered
-- **Resolution Complexity**: How difficult this would be to fix
+- **Affected Flows**: Which business processes are impacted
 
-CRITICAL BUSINESS IMPACT REQUIREMENTS:
-- NEVER use "Impact not specified" or generic phrases
-- ALWAYS provide specific, measurable business impact
-- Include revenue estimates when possible (e.g., "Could cause $10K monthly revenue loss")
-- Specify operational impact (e.g., "Increases support tickets by 30%")
-- Mention compliance risks (e.g., "GDPR violation risk with €20M potential fine")
-- Include user experience impact (e.g., "40% user drop-off rate")
+BUSINESS IMPACT EXAMPLES (Use similar specificity):
+- "Could cause 25% user churn during payment failures, resulting in $50K monthly revenue loss"
+- "GDPR compliance violation risk with potential €20M fine for data retention issues"
+- "Manual workarounds increase operational overhead by 15 hours/week ($30K annual cost)"
+- "System downtime during peak hours could cost $5K per hour in lost transactions"
 
-Focus on scenarios that:
-- Could actually happen in production environments
-- Have measurable business impact
-- Require clarification in the PRD
-- Represent gaps in current thinking
-- Could prevent successful product launch or operation
-
-Return a JSON array with this exact structure:
+Return JSON array:
 [
   {
     "id": "unique_id",
@@ -473,10 +334,10 @@ Return a JSON array with this exact structure:
     "title": "Question-focused title (What happens when...? How does...? Where is...?)",
     "description": "Specific business scenario explaining why this matters operationally",
     "affectedJourneys": ["array_of_journey_ids_affected"],
-    "businessImpact": "SPECIFIC measurable impact on revenue, operations, compliance, or user experience with numbers/percentages when possible",
-    "exampleScenario": "Concrete, realistic example of when this would surface in real usage",
-    "operationalFrequency": "How often this scenario might occur (Daily, Weekly, Monthly, Rare)",
-    "detectionMethod": "How this issue would be discovered (Monitoring, User reports, Audit, etc.)",
+    "businessImpact": "SPECIFIC measurable impact with numbers/percentages when possible",
+    "exampleScenario": "Concrete, realistic example of when this would surface",
+    "operationalFrequency": "Daily|Weekly|Monthly|Rare",
+    "detectionMethod": "How this issue would be discovered",
     "recommendation": "High-level approach to address the gap",
     "questionsToResolve": [
       "Specific question 1 that needs PRD clarification",
@@ -485,28 +346,12 @@ Return a JSON array with this exact structure:
   }
 ]
 
-BUSINESS IMPACT EXAMPLES (Use similar specificity):
-- "Could cause 25% user churn during payment failures, resulting in $50K monthly revenue loss"
-- "Increases customer support tickets by 40%, requiring 2 additional support staff ($120K annual cost)"
-- "GDPR compliance violation risk with potential €20M fine for data retention issues"
-- "System downtime during peak hours could cost $5K per hour in lost transactions"
-- "Manual workarounds increase operational overhead by 15 hours/week ($30K annual cost)"
-- "Poor user experience could reduce conversion rate from 12% to 8%, losing $25K monthly"
-
 Severity Guidelines:
-- **Critical**: Revenue impact >$10K, compliance violations, operational failures, data integrity issues, security vulnerabilities
-- **Moderate**: User experience degradation, operational inefficiencies, scalability concerns, moderate revenue impact
-- **Minor**: Edge case scenarios, optimization opportunities, nice-to-have clarifications, low-frequency issues
+- **Critical**: Revenue impact >$10K, compliance violations, operational failures
+- **Moderate**: User experience degradation, operational inefficiencies, scalability concerns
+- **Minor**: Edge case scenarios, optimization opportunities, low-frequency issues
 
-CRITICAL SUCCESS FACTORS:
-1. Focus on business-critical scenarios that could actually impact product success
-2. Frame each issue as specific questions that need PRD clarification
-3. Provide concrete, realistic examples that stakeholders can understand
-4. Consider the full operational lifecycle, not just development scenarios
-5. Think about what happens when business conditions change unexpectedly
-6. ALWAYS provide specific, measurable business impact - never use generic phrases
-
-Return ONLY the JSON array, no additional text.
+Focus on business-critical scenarios that could actually impact product success. Return ONLY the JSON array.
 `;
 
     try {
@@ -514,7 +359,6 @@ Return ONLY the JSON array, no additional text.
       const response = await result.response;
       const text = response.text();
       
-      // Clean up the response to extract just the JSON
       const jsonMatch = text.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]);
@@ -530,62 +374,46 @@ Return ONLY the JSON array, no additional text.
     if (!this.model) this.initialize();
 
     const prompt = `
-As a senior product manager, provide a comprehensive business readiness score for this PRD analysis.
-
-${context.company ? `Company Context: ${context.company}` : ''}
-${context.problemStatement ? `Problem Statement: ${context.problemStatement}` : ''}
+Provide a comprehensive business readiness score for this PRD analysis.
 
 Analysis Summary:
-- Document Length: ${content.length} characters
-- Total Business Journeys Identified: ${journeys.length}
+- Total Business Flows Identified: ${journeys.length}
 - Total Business Logic Issues Found: ${edgeCases.length}
 - Critical Business Issues: ${edgeCases.filter(e => e.severity === 'critical').length}
-- Moderate Operational Issues: ${edgeCases.filter(e => e.severity === 'moderate').length}
-- Minor Edge Cases: ${edgeCases.filter(e => e.severity === 'minor').length}
 
-Evaluate the PRD's business readiness based on:
+Evaluate business readiness based on:
 
 1. **Business Logic Completeness** (40%): 
    - Are core business flows well-defined and comprehensive?
    - Are revenue and operational impacts clearly specified?
-   - Are success metrics and KPIs properly defined?
-   - Are business rules and constraints thoroughly documented?
-   - Is the full operational ecosystem covered (not just happy paths)?
+   - Is the full operational ecosystem covered?
 
 2. **Operational Readiness** (30%):
-   - Are monitoring and alerting requirements clearly specified?
-   - Are scaling and performance considerations adequately addressed?
-   - Are error handling and recovery procedures well-defined?
-   - Are compliance and audit requirements properly specified?
-   - Is the support and troubleshooting framework adequate?
+   - Are monitoring and alerting requirements specified?
+   - Are scaling and performance considerations addressed?
+   - Are error handling and recovery procedures defined?
 
 3. **Cross-Functional Dependencies** (20%):
-   - Are integration points and external dependencies clearly mapped?
-   - Are data flow and state management requirements well-defined?
-   - Are timing and frequency constraints properly specified?
-   - Are stakeholder responsibilities and handoffs clear?
-   - Is the impact on existing systems properly considered?
+   - Are integration points and external dependencies mapped?
+   - Are data flow and state management requirements defined?
+   - Are timing and frequency constraints specified?
 
 4. **Risk Mitigation** (10%):
-   - Are potential business disruptions identified and planned for?
-   - Are rollback and contingency plans adequately considered?
-   - Are edge cases and failure scenarios properly addressed?
-   - Is the change management strategy sufficient?
+   - Are potential business disruptions identified?
+   - Are rollback and contingency plans considered?
+   - Are edge cases and failure scenarios addressed?
 
-Scoring criteria based on comprehensive flow analysis:
-- 90-100: Production-ready PRD with comprehensive business logic, operational considerations, and full ecosystem coverage (8+ journeys identified)
-- 80-89: Strong PRD with minor gaps in operational details or edge case handling (6-8 journeys identified)
-- 70-79: Good PRD foundation but needs clarification on business logic or operational requirements (4-6 journeys identified)
-- 60-69: Adequate PRD but significant gaps in business readiness and operational planning (2-4 journeys identified)
-- Below 60: PRD requires major revision for business logic completeness and operational readiness (0-2 journeys identified)
+Scoring criteria:
+- 90-100: Production-ready with comprehensive business logic (8+ flows identified)
+- 80-89: Strong foundation with minor gaps (6-8 flows identified)
+- 70-79: Good foundation but needs clarification (4-6 flows identified)
+- 60-69: Adequate but significant gaps (2-4 flows identified)
+- Below 60: Requires major revision (0-2 flows identified)
 
-Additional scoring factors:
-- Deduct 10-15 points if fewer than 6 distinct journeys were identified (indicates incomplete analysis)
-- Deduct 5-10 points for each critical business logic gap
-- Add 5-10 points if comprehensive operational flows are well-documented
-- Consider the complexity and business impact of identified edge cases
+Deduct 10-15 points if fewer than 6 distinct flows identified.
+Deduct 5-10 points for each critical business logic gap.
 
-Return only a number between 0-100 representing the business readiness score.
+Return only a number between 0-100.
 `;
 
     try {

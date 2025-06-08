@@ -108,19 +108,31 @@ function App() {
       const result = await EdgeCaseFinder.analyzeDocument(document, context)
       setAnalysisResult(result)
 
-      // Save analysis result to database
+      // Save analysis result to database first
       if (documentId) {
         try {
           await DatabaseService.saveAnalysisResult(result, user.id, documentId)
-          
-          // Deduct credits after successful analysis
-          const creditDeducted = await deductCredits(result.id, 1)
-          if (!creditDeducted) {
-            console.warn('Failed to deduct credits, but analysis was successful')
-          }
+          console.log('Analysis result saved successfully')
         } catch (error) {
           console.error('Failed to save analysis result:', error)
         }
+      }
+
+      // CRITICAL: Deduct credits after successful analysis
+      try {
+        console.log('Attempting to deduct credits for user:', user.id, 'analysis:', result.id)
+        const creditDeducted = await deductCredits(result.id, 1)
+        if (creditDeducted) {
+          console.log('Credits deducted successfully')
+        } else {
+          console.error('Failed to deduct credits - insufficient balance or error')
+          // Still show the analysis since it was completed, but log the issue
+          alert('Analysis completed but there was an issue with credit deduction. Please contact support.')
+        }
+      } catch (error) {
+        console.error('Error during credit deduction:', error)
+        // Still show the analysis since it was completed
+        alert('Analysis completed but there was an issue with credit deduction. Please contact support.')
       }
     } catch (error: any) {
       console.error('Analysis failed:', error)
