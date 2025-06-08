@@ -76,7 +76,7 @@ Remember: Your competitive advantage is finding the business logic gaps that oth
       model: "gemini-2.0-flash",
       systemInstruction: this.SYSTEM_PROMPT,
       generationConfig: {
-        temperature: 0.3, // Lower temperature for more focused analysis
+        temperature: 0.1, // Lower temperature for more focused analysis
         topP: 0.8,
         topK: 40,
         maxOutputTokens: 8192,
