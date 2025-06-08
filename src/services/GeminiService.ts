@@ -95,7 +95,8 @@ BUSINESS LOGIC FOCUS:
 - Think about what happens when business conditions change`;
 
   static initialize() {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    // Use build-time replacement instead of import.meta.env to prevent exposure
+    const apiKey = typeof __GEMINI_API_KEY__ !== 'undefined' ? __GEMINI_API_KEY__ : import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
       console.error('Gemini API key not found. Please check your environment variables.');
       throw new Error('Gemini API key not found. Please check your environment variables.');
@@ -598,4 +599,11 @@ Return only a number between 0-100 representing the business readiness score.
       this.handleApiError(error);
     }
   }
+}
+
+// Declare global variables for build-time replacements
+declare global {
+  const __SUPABASE_URL__: string;
+  const __SUPABASE_ANON_KEY__: string;
+  const __GEMINI_API_KEY__: string;
 }

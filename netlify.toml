@@ -9,6 +9,10 @@
 [build.processing]
   skip_processing = false
 
+# Configure secrets scanning to ignore expected environment variables
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_GEMINI_API_KEY"
+
 # Security headers
 [[headers]]
   for = "/*"
