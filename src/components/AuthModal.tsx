@@ -72,117 +72,119 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="h-5 w-5 text-gray-500" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-              <Mail className="h-4 w-4 mr-2" />
-              Email Address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              placeholder="Enter your email"
-            />
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md mx-4 shadow-2xl">
+        <div className="p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+              {isSignUp ? 'Create Account' : 'Welcome Back'}
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="h-5 w-5 text-gray-500" />
+            </button>
           </div>
 
-          <div>
-            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-              <Lock className="h-4 w-4 mr-2" />
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              placeholder="Enter your password"
-            />
-            {isSignUp && (
-              <p className="text-xs text-gray-500 mt-1">
-                Password must be at least 6 characters long
-              </p>
-            )}
-          </div>
-
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center">
-                <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                <Mail className="h-4 w-4 mr-2" />
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm sm:text-base"
+                placeholder="Enter your email"
+              />
             </div>
-          )}
 
-          {success && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-start">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-green-700">{success}</p>
-                  <div className="flex items-center mt-2 text-xs text-green-600">
-                    <Clock className="h-3 w-3 mr-1" />
-                    <span>Check your email inbox and spam folder</span>
+            <div>
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                <Lock className="h-4 w-4 mr-2" />
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm sm:text-base"
+                placeholder="Enter your password"
+              />
+              {isSignUp && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Password must be at least 6 characters long
+                </p>
+              )}
+            </div>
+
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </div>
+            )}
+
+            {success && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-green-700">{success}</p>
+                    <div className="flex items-center mt-2 text-xs text-green-600">
+                      <Clock className="h-3 w-3 mr-1" />
+                      <span>Check your email inbox and spam folder</span>
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm sm:text-base"
+            >
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {isSignUp ? 'Creating Account...' : 'Signing In...'}
+                </div>
+              ) : (
+                isSignUp ? 'Create Account' : 'Sign In'
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <button
+              onClick={switchMode}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+            >
+              {isSignUp 
+                ? 'Already have an account? Sign in' 
+                : "Don't have an account? Sign up"
+              }
+            </button>
+          </div>
+
+          {isSignUp && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-700">
+                By creating an account, you agree to our Terms of Service and Privacy Policy. 
+                <strong> Email verification is required</strong> before you can access the application.
+              </p>
             </div>
           )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-          >
-            {loading ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                {isSignUp ? 'Creating Account...' : 'Signing In...'}
-              </div>
-            ) : (
-              isSignUp ? 'Create Account' : 'Sign In'
-            )}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <button
-            onClick={switchMode}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
-          >
-            {isSignUp 
-              ? 'Already have an account? Sign in' 
-              : "Don't have an account? Sign up"
-            }
-          </button>
         </div>
-
-        {isSignUp && (
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-xs text-blue-700">
-              By creating an account, you agree to our Terms of Service and Privacy Policy. 
-              <strong> Email verification is required</strong> before you can access the application.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   )
