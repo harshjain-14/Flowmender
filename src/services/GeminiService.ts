@@ -4,50 +4,28 @@ export class GeminiService {
   private static genAI: GoogleGenerativeAI;
   private static model: any;
 
-  // FOCUSED PRD ANALYSIS PROMPT - SPECIFIC TO PRODUCT REQUIREMENTS
-  private static readonly SYSTEM_PROMPT = `You are a senior product manager who specializes in PRD quality assurance. Your job is to identify specific problems, gaps, and inconsistencies in Product Requirements Documents that would prevent successful product development.
+  // SIMPLIFIED AND FOCUSED SYSTEM PROMPT
+  private static readonly SYSTEM_PROMPT = `You are an experienced product manager who has launched 50+ products and seen them fail due to overlooked requirements gaps.
 
-FOCUS: Find concrete, actionable problems in the PRD itself - not generic business advice.
+Your job is to read PRDs with a critical eye and identify the real problems that will surface during development and launch.
 
-WHAT TO LOOK FOR:
+FOCUS AREAS:
+1. Find 3-5 core user journeys that are actually described or implied in the PRD
+2. Identify specific gaps, ambiguities, and missing logic in those journeys
+3. Focus on problems that will cause real pain: confused developers, broken user experiences, launch delays
 
-1. **REQUIREMENT GAPS**: 
-   - Missing user roles or personas
-   - Undefined user actions or flows
-   - Vague or unmeasurable requirements
-   - Missing success criteria or KPIs
+BE SPECIFIC AND CRITICAL:
+- Don't invent features not mentioned in the PRD
+- Don't add generic security/compliance issues unless they're relevant to the specific product
+- Point out actual ambiguities and missing details
+- Ask hard questions about edge cases that matter for THIS product
+- Focus on what's unclear or missing that would block development
 
-2. **LOGICAL INCONSISTENCIES**:
-   - Contradictory requirements
-   - Impossible user flows
-   - Missing dependencies between features
-   - Conflicting business rules
-
-3. **IMPLEMENTATION AMBIGUITIES**:
-   - Unclear feature behavior
-   - Missing error states
-   - Undefined edge cases in user flows
-   - Vague acceptance criteria
-
-4. **MISSING CRITICAL DETAILS**:
-   - User permissions and access control
-   - Data validation rules
-   - Integration requirements
-   - Performance expectations
-
-WHAT TO AVOID:
-- Generic security recommendations not tied to specific PRD content
-- Broad compliance suggestions without PRD context
-- Theoretical business scenarios not mentioned in the document
-- Technical implementation details not relevant to requirements
-
-OUTPUT STYLE:
-- Reference specific PRD sections when identifying problems
-- Frame issues as questions that need clarification
-- Provide concrete examples from the document
-- Focus on what would block development or cause user confusion
-
-Remember: Analyze what's actually written (or missing) in the PRD, not what generally should be in any product.`;
+AVOID:
+- Generic business advice
+- Standard security/compliance checklists
+- Made-up user flows not in the PRD
+- Theoretical edge cases that don't apply to this product`;
 
   static initialize() {
     const apiKey = typeof __GEMINI_API_KEY__ !== 'undefined' ? __GEMINI_API_KEY__ : import.meta.env.VITE_GEMINI_API_KEY;
@@ -61,7 +39,7 @@ Remember: Analyze what's actually written (or missing) in the PRD, not what gene
       model: "gemini-2.0-flash",
       systemInstruction: this.SYSTEM_PROMPT,
       generationConfig: {
-        temperature: 0.2, // Slightly higher for more nuanced analysis
+        temperature: 0.3, // Slightly higher for more nuanced analysis
         topP: 0.9,
         topK: 40,
         maxOutputTokens: 8192,
@@ -92,25 +70,24 @@ Analyze this document to determine if it's a Product Requirements Document (PRD)
 Document Content:
 ${content.substring(0, 4000)}${content.length > 4000 ? '...[truncated]' : ''}
 
-Look for these PRD indicators:
-- Feature descriptions and requirements
+Look for:
+- Product features and requirements
 - User stories or use cases  
-- Acceptance criteria or success metrics
-- Product objectives or goals
-- User flows or workflows
-- Technical requirements or constraints
+- Technical specifications
+- Business objectives
+- User journeys or workflows
 
-Avoid false positives from:
-- Personal documents (recipes, letters, stories)
-- Financial documents (invoices, statements)
-- Legal documents (contracts, terms)
-- Generic business content without product focus
+Avoid false positives for:
+- Personal documents, recipes, stories
+- Financial documents, invoices
+- Legal documents, contracts
+- Academic papers, news articles
 
 Return ONLY this JSON:
 {
   "isPRD": true/false,
   "confidence": 0-100,
-  "reasons": ["reason 1", "reason 2", "reason 3"]
+  "reasons": ["reason1", "reason2", "reason3"]
 }
 `;
 
@@ -125,7 +102,7 @@ Return ONLY this JSON:
         return {
           isPRD: parsed.isPRD || false,
           confidence: Math.max(0, Math.min(100, parsed.confidence || 0)),
-          reasons: Array.isArray(parsed.reasons) ? parsed.reasons : ['Analysis completed']
+          reasons: Array.isArray(parsed.reasons) ? parsed.reasons : ['AI analysis completed']
         };
       }
       
@@ -138,48 +115,51 @@ Return ONLY this JSON:
   static async analyzeForUserJourneys(content: string, context: { company?: string; problemStatement?: string }) {
     if (!this.model) this.initialize();
 
-    // Create context string only if provided
-    const contextString = [
+    // Build context string only if provided
+    const contextInfo = [
       context.company ? `Company: ${context.company}` : '',
-      context.problemStatement ? `Problem: ${context.problemStatement}` : ''
+      context.problemStatement ? `Problem Statement: ${context.problemStatement}` : ''
     ].filter(Boolean).join('\n');
 
     const prompt = `
-Extract the main user flows described in this PRD. Focus only on flows that are explicitly mentioned or clearly implied in the document.
+Read this PRD and identify the 3-5 most important user journeys that are actually described or clearly implied.
 
-${contextString ? `Context:\n${contextString}\n` : ''}
+${contextInfo ? `Context:\n${contextInfo}\n` : ''}
 
 PRD Document:
 ${content}
 
 INSTRUCTIONS:
-- Extract 4-8 user flows that are actually described in the PRD
-- Don't invent flows that aren't mentioned in the document
-- Focus on the core user interactions and workflows
-- Include different user types if mentioned (end users, admins, etc.)
+1. Only extract journeys that are actually mentioned or clearly implied in the PRD
+2. Focus on the core flows that users will actually go through
+3. Be specific about what the PRD says vs what's missing
+4. Don't invent features or flows not mentioned
 
-For each flow, identify:
-- What user type performs it
-- The main steps they take
-- What triggers the flow
-- What the expected outcome is
+For each journey, extract:
+- What the user is trying to accomplish
+- The steps they take (based on what's described in the PRD)
+- Where the PRD is unclear or missing important details
+- Critical decision points or branching logic
 
 Return JSON array:
 [
   {
-    "id": "flow_1",
-    "name": "Clear, descriptive flow name",
-    "description": "What this flow accomplishes",
-    "userType": "Who performs this (from PRD)",
-    "trigger": "What starts this flow",
-    "priority": "high|medium|low (based on PRD emphasis)",
+    "id": "journey_1",
+    "name": "Clear, specific journey name",
+    "description": "What this journey accomplishes for the user",
+    "userType": "Who performs this journey",
+    "priority": "high|medium|low",
     "steps": [
       {
         "id": "step_1",
-        "action": "Specific user action",
+        "action": "Specific action the user takes",
         "description": "What happens in this step",
-        "expectedOutcome": "What should result"
+        "prdClarity": "clear|unclear|missing",
+        "gaps": ["Specific things that are unclear or missing"]
       }
+    ],
+    "criticalQuestions": [
+      "Specific questions about this journey that the PRD doesn't answer"
     ]
   }
 ]
@@ -197,7 +177,7 @@ Return ONLY the JSON array.
         return JSON.parse(jsonMatch[0]);
       }
       
-      throw new Error('Could not parse user flows from response');
+      throw new Error('Could not parse journeys from AI response');
     } catch (error) {
       this.handleApiError(error);
     }
@@ -206,62 +186,64 @@ Return ONLY the JSON array.
   static async analyzeForEdgeCases(content: string, journeys: any[], context: { company?: string; problemStatement?: string }) {
     if (!this.model) this.initialize();
 
-    const contextString = [
+    const contextInfo = [
       context.company ? `Company: ${context.company}` : '',
-      context.problemStatement ? `Problem: ${context.problemStatement}` : ''
+      context.problemStatement ? `Problem Statement: ${context.problemStatement}` : ''
     ].filter(Boolean).join('\n');
 
     const prompt = `
-Analyze this PRD for specific problems, gaps, and inconsistencies that would prevent successful product development.
+Based on this PRD and the extracted user journeys, identify the most critical gaps and issues that will cause problems during development or after launch.
 
-${contextString ? `Context:\n${contextString}\n` : ''}
+${contextInfo ? `Context:\n${contextInfo}\n` : ''}
 
 PRD Document:
 ${content}
 
-Identified User Flows:
+User Journeys Found:
 ${JSON.stringify(journeys, null, 2)}
 
-FIND THESE SPECIFIC PROBLEMS:
+FOCUS ON REAL PROBLEMS:
+1. Requirements that are ambiguous or contradictory
+2. Missing error handling or failure scenarios
+3. Unclear business logic or decision rules
+4. Integration points that aren't well defined
+5. User experience gaps that will confuse users
+6. Missing validation or data requirements
 
-1. **MISSING REQUIREMENTS**: What's not defined that should be?
-2. **VAGUE SPECIFICATIONS**: What requirements are too unclear to implement?
-3. **LOGICAL CONFLICTS**: What requirements contradict each other?
-4. **INCOMPLETE FLOWS**: What steps are missing from user journeys?
-5. **UNDEFINED BEHAVIORS**: What happens in error cases or edge situations?
+FOR EACH ISSUE:
+- Be specific about what's missing or unclear
+- Explain why this will cause problems
+- Reference specific parts of the PRD
+- Focus on issues relevant to THIS product, not generic problems
 
-ANALYSIS RULES:
-- Only identify problems you can specifically point to in the PRD
-- Reference exact sections or requirements when possible
-- Don't suggest generic features not mentioned in the document
-- Focus on what would confuse developers or block implementation
-- Frame as specific questions that need PRD clarification
-
-For each issue, ask yourself:
-- Is this problem actually present in the PRD text?
-- Would a developer be confused by this specific requirement?
-- Can I point to the exact section that's problematic?
+AVOID:
+- Generic security/compliance issues unless specifically relevant
+- Theoretical edge cases that don't apply to this product
+- Issues that are outside the scope of what's described in the PRD
 
 Return JSON array:
 [
   {
     "id": "issue_1",
-    "type": "missing_requirement|vague_specification|logical_conflict|incomplete_flow|undefined_behavior",
-    "severity": "high|medium|low",
-    "title": "Specific problem title",
-    "description": "What exactly is wrong or missing",
-    "prdSection": "Which part of PRD this affects (if identifiable)",
-    "affectedFlows": ["flow_ids that are impacted"],
-    "specificQuestion": "What exact question needs to be answered?",
-    "blockingImpact": "Why this would prevent development or cause user issues",
-    "suggestedClarification": "What should be added or clarified in the PRD"
+    "title": "Specific, actionable title describing the gap",
+    "severity": "critical|high|medium",
+    "category": "requirements_gap|logic_unclear|integration_missing|error_handling|user_experience",
+    "description": "Clear explanation of what's missing or unclear",
+    "impact": "Why this will cause problems - be specific",
+    "affectedJourneys": ["journey_ids_affected"],
+    "prdReferences": "Specific sections or quotes from the PRD",
+    "questionsToResolve": [
+      "Specific question 1 that needs to be answered",
+      "Specific question 2 that needs to be answered"
+    ],
+    "recommendation": "What should be done to address this"
   }
 ]
 
-Severity guidelines:
-- **High**: Blocks core functionality or causes major user confusion
-- **Medium**: Causes implementation delays or minor user issues  
-- **Low**: Nice-to-have clarifications or minor edge cases
+Severity Guidelines:
+- Critical: Will block development or cause major launch issues
+- High: Will cause user confusion or significant rework
+- Medium: Important to clarify but won't block progress
 
 Return ONLY the JSON array.
 `;
@@ -276,57 +258,37 @@ Return ONLY the JSON array.
         return JSON.parse(jsonMatch[0]);
       }
       
-      throw new Error('Could not parse issues from response');
+      throw new Error('Could not parse issues from AI response');
     } catch (error) {
       this.handleApiError(error);
     }
   }
 
-  static async generateInsights(content: string, journeys: any[], edgeCases: any[], context: { company?: string; problemStatement?: string }) {
+  static async generateInsights(content: string, journeys: any[], issues: any[], context: { company?: string; problemStatement?: string }) {
     if (!this.model) this.initialize();
 
+    const criticalIssues = issues.filter(i => i.severity === 'critical').length;
+    const highIssues = issues.filter(i => i.severity === 'high').length;
+    const journeyCount = journeys.length;
+
     const prompt = `
-Score this PRD's readiness for development based on the analysis.
+Provide a readiness score for this PRD based on the analysis.
 
-Analysis Results:
-- User Flows Identified: ${journeys.length}
-- Issues Found: ${edgeCases.length}
-- High Severity Issues: ${edgeCases.filter(e => e.severity === 'high').length}
+Analysis Summary:
+- User Journeys Identified: ${journeyCount}
+- Critical Issues: ${criticalIssues}
+- High Priority Issues: ${highIssues}
+- Total Issues: ${issues.length}
 
-Evaluate based on:
+Scoring Logic:
+- Start with base score of 85
+- Deduct 15 points for each critical issue
+- Deduct 8 points for each high priority issue  
+- Deduct 3 points for each medium priority issue
+- Add 5 points if 4+ clear user journeys identified
+- Deduct 10 points if fewer than 3 user journeys identified
 
-1. **Requirement Completeness** (40%):
-   - Are core features clearly defined?
-   - Are user flows comprehensive?
-   - Are success criteria specified?
-
-2. **Specification Clarity** (30%):
-   - Are requirements specific enough to implement?
-   - Are acceptance criteria measurable?
-   - Are edge cases addressed?
-
-3. **Internal Consistency** (20%):
-   - Are requirements logically coherent?
-   - Do user flows make sense?
-   - Are there contradictions?
-
-4. **Implementation Readiness** (10%):
-   - Can developers start building from this?
-   - Are dependencies clear?
-   - Are constraints specified?
-
-Scoring:
-- 90-100: Ready for development
-- 80-89: Minor clarifications needed
-- 70-79: Some gaps need addressing
-- 60-69: Significant revision required
-- Below 60: Major rewrite needed
-
-Deduct points for:
-- Each high severity issue: -10 points
-- Each medium severity issue: -5 points
-- Fewer than 3 user flows: -15 points
-- Missing core requirements: -20 points
+The score should reflect how ready this PRD is for development to begin.
 
 Return only a number between 0-100.
 `;
