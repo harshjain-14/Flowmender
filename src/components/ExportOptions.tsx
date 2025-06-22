@@ -2,6 +2,7 @@ import React from 'react';
 import { Download, FileText, Code, FileImage } from 'lucide-react';
 import { AnalysisResult } from '../types';
 import { ReportGenerator } from '../services/ReportGenerator';
+import { AnalyticsService } from '../services/AnalyticsService';
 
 interface ExportOptionsProps {
   result: AnalysisResult;
@@ -13,6 +14,14 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({ result }) => {
     const baseFilename = `prd-analysis-${result.documentName.replace(/\.[^/.]+$/, '')}-${timestamp}`;
 
     try {
+      // Track export attempt
+      AnalyticsService.trackExport(format, {
+        document_name: result.documentName,
+        total_journeys: result.summary.totalJourneys,
+        total_edge_cases: result.summary.totalEdgeCases,
+        critical_issues: result.summary.criticalIssues
+      });
+
       switch (format) {
         case 'markdown':
           const markdown = ReportGenerator.generateMarkdown(result);
@@ -29,9 +38,18 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({ result }) => {
           ReportGenerator.downloadFile(pdf, `${baseFilename}.pdf`, 'application/pdf');
           break;
       }
+
+      // Track successful export
+      AnalyticsService.trackUserAction('export_completed', { format });
     } catch (error) {
       console.error('Export failed:', error);
       alert('Export failed. Please try again.');
+      
+      // Track export failure
+      AnalyticsService.trackUserAction('export_failed', { 
+        format, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   };
 

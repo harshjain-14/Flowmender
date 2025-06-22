@@ -13,7 +13,7 @@ import { CreditDisplay } from './components/CreditDisplay'
 import { EdgeCaseFinder } from './services/EdgeCaseFinder'
 import { DatabaseService } from './services/DatabaseService'
 import { CreditService } from './services/CreditService'
-import { DocumentValidator } from './services/DocumentValidator'
+import { AnalyticsService } from './services/AnalyticsService'
 import { PRDDocument, AnalysisResult, ProcessingStatus as Status } from './types'
 import { useAuth } from './hooks/useAuth'
 import { useCredits } from './hooks/useCredits'
@@ -37,6 +37,23 @@ function App() {
   const [currentView, setCurrentView] = useState<'analyze' | 'history'>('analyze')
   const [emailVerificationMessage, setEmailVerificationMessage] = useState<string | null>(null)
 
+  // Track page view on app load
+  useEffect(() => {
+    AnalyticsService.trackPageView('app_home')
+  }, [])
+
+  // Track user identification when user logs in
+  useEffect(() => {
+    if (user) {
+      AnalyticsService.identifyUser(user.id, {
+        email: user.email,
+        email_verified: !!user.email_confirmed_at,
+        created_at: user.created_at
+      })
+      AnalyticsService.trackAuth('signin')
+    }
+  }, [user])
+
   // Handle email verification success
   useEffect(() => {
     const handleAuthStateChange = () => {
@@ -50,6 +67,9 @@ function App() {
         
         // Show success message
         setEmailVerificationMessage('Email verified successfully! Welcome to FlowMender.')
+        
+        // Track email verification
+        AnalyticsService.trackAuth('email_verified')
         
         // Clear message after 5 seconds
         setTimeout(() => {
@@ -70,6 +90,13 @@ function App() {
       message: ''
     })
 
+    // Track file upload
+    AnalyticsService.trackFileUpload('completed', {
+      file_type: uploadedDocument.type,
+      file_size: uploadedDocument.size,
+      file_name: uploadedDocument.name
+    })
+
     // Save document to database
     if (user) {
       try {
@@ -83,10 +110,23 @@ function App() {
 
   const handleContextUpdate = (newContext: { company?: string; problemStatement?: string }) => {
     setContext(newContext)
+    
+    // Track context update
+    AnalyticsService.trackUserAction('context_updated', {
+      has_company: !!newContext.company,
+      has_problem_statement: !!newContext.problemStatement
+    })
   }
 
   const handleAnalyzeClick = () => {
     if (!document || !user) return
+    
+    // Track analysis initiation
+    AnalyticsService.trackUserAction('analysis_initiated', {
+      document_type: document.type,
+      has_context: !!(context.company || context.problemStatement)
+    })
+    
     setShowAnalysisConfirm(true)
   }
 
@@ -97,6 +137,9 @@ function App() {
     const hasEnoughCredits = credits && credits.credits >= 1
     if (!hasEnoughCredits) {
       setShowAnalysisConfirm(false)
+      AnalyticsService.trackCreditUsage('insufficient', {
+        current_credits: credits?.credits || 0
+      })
       alert('You need at least 1 credit to perform an analysis. Please contact support for more credits.')
       return
     }
@@ -104,6 +147,13 @@ function App() {
     setShowAnalysisConfirm(false)
     setIsProcessing(true)
     EdgeCaseFinder.setProgressCallback(setProcessingStatus)
+
+    // Track analysis start
+    AnalyticsService.trackAnalysis('started', {
+      document_type: document.type,
+      document_size: document.size,
+      has_context: !!(context.company || context.problemStatement)
+    })
 
     try {
       const result = await EdgeCaseFinder.analyzeDocument(document, context)
@@ -125,6 +175,10 @@ function App() {
         const creditDeducted = await deductCredits(result.id, 1)
         if (creditDeducted) {
           console.log('Credits deducted successfully')
+          AnalyticsService.trackCreditUsage('deducted', {
+            credits_used: 1,
+            remaining_credits: (credits?.credits || 1) - 1
+          })
         } else {
           console.error('Failed to deduct credits - insufficient balance or error')
           // Still show the analysis since it was completed, but log the issue
@@ -135,6 +189,14 @@ function App() {
         // Still show the analysis since it was completed
         alert('Analysis completed but there was an issue with credit deduction. Please contact support.')
       }
+
+      // Track successful analysis
+      AnalyticsService.trackAnalysis('completed', {
+        total_journeys: result.summary.totalJourneys,
+        total_edge_cases: result.summary.totalEdgeCases,
+        critical_issues: result.summary.criticalIssues,
+        coverage_score: result.summary.coverageScore
+      })
     } catch (error: any) {
       console.error('Analysis failed:', error)
       
@@ -148,6 +210,13 @@ function App() {
         errorMessage = `Analysis failed: ${error.message}`
       }
       
+      // Track analysis failure
+      AnalyticsService.trackAnalysis('failed', {
+        error_message: error.message,
+        error_type: error.message?.includes('quota') ? 'quota_exceeded' : 
+                   error.message?.includes('API key') ? 'api_key_issue' : 'unknown'
+      })
+      
       alert(errorMessage)
     } finally {
       setIsProcessing(false)
@@ -157,10 +226,19 @@ function App() {
   const handleAnalysisSelect = (selectedResult: AnalysisResult) => {
     setAnalysisResult(selectedResult)
     setCurrentView('analyze')
+    
+    // Track analysis selection from history
+    AnalyticsService.trackUserAction('analysis_selected_from_history', {
+      analysis_id: selectedResult.id,
+      document_name: selectedResult.documentName
+    })
   }
 
   const handleUserMenuNavigate = (view: 'history') => {
     setCurrentView(view)
+    
+    // Track navigation
+    AnalyticsService.trackPageView(`app_${view}`)
   }
 
   const canAnalyze = document && !isProcessing && user && credits && credits.credits >= 1
@@ -211,6 +289,7 @@ function App() {
                   alert('Failed to resend verification email')
                 } else {
                   alert('Verification email sent! Please check your inbox.')
+                  AnalyticsService.trackAuth('email_resent')
                 }
               }}
               className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
@@ -220,6 +299,7 @@ function App() {
             <button
               onClick={() => {
                 supabase.auth.signOut()
+                AnalyticsService.trackAuth('signout')
               }}
               className="w-full text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
             >
@@ -256,7 +336,10 @@ function App() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setShowAuthModal(true)}
+                  onClick={() => {
+                    setShowAuthModal(true)
+                    AnalyticsService.trackUserAction('auth_modal_opened', { source: 'header' })
+                  }}
                   className="flex items-center space-x-1 sm:space-x-2 bg-blue-600 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
                 >
                   <LogIn className="h-4 w-4" />
@@ -287,7 +370,10 @@ function App() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6 sm:mb-8">
               <button
-                onClick={() => setShowAuthModal(true)}
+                onClick={() => {
+                  setShowAuthModal(true)
+                  AnalyticsService.trackUserAction('auth_modal_opened', { source: 'hero_cta' })
+                }}
                 className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 font-medium text-base sm:text-lg shadow-lg w-full sm:w-auto"
               >
                 <Brain className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
@@ -393,7 +479,10 @@ function App() {
             </div>
             <div className="mt-6 text-center">
               <button
-                onClick={() => setShowAuthModal(true)}
+                onClick={() => {
+                  setShowAuthModal(true)
+                  AnalyticsService.trackUserAction('auth_modal_opened', { source: 'example_analysis' })
+                }}
                 className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium text-sm sm:text-base"
               >
                 Try This Analysis on Your PRD
@@ -537,7 +626,10 @@ function App() {
               Join thousands of product teams who trust AI to catch what humans miss.
             </p>
             <button
-              onClick={() => setShowAuthModal(true)}
+              onClick={() => {
+                setShowAuthModal(true)
+                AnalyticsService.trackUserAction('auth_modal_opened', { source: 'final_cta' })
+              }}
               className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 font-medium text-base sm:text-lg shadow-lg"
             >
               <LogIn className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
@@ -610,7 +702,10 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-4 sm:space-x-8 overflow-x-auto">
             <button
-              onClick={() => setCurrentView('analyze')}
+              onClick={() => {
+                setCurrentView('analyze')
+                AnalyticsService.trackPageView('app_analyze')
+              }}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                 currentView === 'analyze'
                   ? 'border-blue-500 text-blue-600'
@@ -623,7 +718,10 @@ function App() {
               </div>
             </button>
             <button
-              onClick={() => setCurrentView('history')}
+              onClick={() => {
+                setCurrentView('history')
+                AnalyticsService.trackPageView('app_history')
+              }}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                 currentView === 'history'
                   ? 'border-blue-500 text-blue-600'

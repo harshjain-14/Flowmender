@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { X, Mail, Lock, AlertCircle, CheckCircle, Clock } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { AnalyticsService } from '../services/AnalyticsService'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -22,6 +23,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setError(null)
     setSuccess(null)
 
+    // Track auth attempt
+    AnalyticsService.trackAuth(isSignUp ? 'signup' : 'signin', {
+      email_domain: email.split('@')[1]
+    })
+
     try {
       const { error } = isSignUp 
         ? await signUp(email, password)
@@ -39,19 +45,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         } else {
           setError(error.message)
         }
+
+        // Track auth failure
+        AnalyticsService.trackUserAction('auth_failed', {
+          type: isSignUp ? 'signup' : 'signin',
+          error_type: error.message.includes('Email not confirmed') ? 'email_not_confirmed' :
+                     error.message.includes('Invalid login credentials') ? 'invalid_credentials' :
+                     error.message.includes('User already registered') ? 'user_exists' : 'other',
+          error_message: error.message
+        })
       } else {
         if (isSignUp) {
           setSuccess('Account created! Please check your email and click the verification link. You must verify your email before you can sign in.')
           setEmail('')
           setPassword('')
+          
+          // Track successful signup
+          AnalyticsService.trackAuth('signup', { email_domain: email.split('@')[1] })
         } else {
           onClose()
           setEmail('')
           setPassword('')
+          
+          // Track successful signin (user identification happens in App.tsx)
         }
       }
     } catch (err) {
       setError('An unexpected error occurred')
+      
+      // Track unexpected error
+      AnalyticsService.trackUserAction('auth_error', {
+        type: isSignUp ? 'signup' : 'signin',
+        error: 'unexpected_error'
+      })
     } finally {
       setLoading(false)
     }
@@ -67,6 +93,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const switchMode = () => {
     setIsSignUp(!isSignUp)
     resetForm()
+    
+    // Track mode switch
+    AnalyticsService.trackUserAction('auth_mode_switched', {
+      to: !isSignUp ? 'signup' : 'signin'
+    })
   }
 
   if (!isOpen) return null
@@ -80,7 +111,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </h2>
             <button
-              onClick={onClose}
+              onClick={() => {
+                onClose()
+                AnalyticsService.trackUserAction('auth_modal_closed')
+              }}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <X className="h-5 w-5 text-gray-500" />
