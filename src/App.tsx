@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Brain, Zap, LogIn, FileText, Users, Shield, CheckCircle, ArrowRight, Star, TrendingUp, Clock, Target, Mail, AlertTriangle, CreditCard } from 'lucide-react'
+import { Brain, Zap, LogIn, FileText, Users, Shield, CheckCircle, ArrowRight, Star, TrendingUp, Clock, Target, Mail, AlertTriangle } from 'lucide-react'
 import { FileUpload } from './components/FileUpload'
 import { ContextForm } from './components/ContextForm'
 import { ProcessingStatus } from './components/ProcessingStatus'
@@ -9,7 +9,6 @@ import { AuthModal } from './components/AuthModal'
 import { UserMenu } from './components/UserMenu'
 import { AnalysisHistory } from './components/AnalysisHistory'
 import { AnalysisConfirmModal } from './components/AnalysisConfirmModal'
-import { PaymentModal } from './components/PaymentModal'
 import { CreditDisplay } from './components/CreditDisplay'
 import { EdgeCaseFinder } from './services/EdgeCaseFinder'
 import { DatabaseService } from './services/DatabaseService'
@@ -35,7 +34,6 @@ function App() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showAnalysisConfirm, setShowAnalysisConfirm] = useState(false)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [currentView, setCurrentView] = useState<'analyze' | 'history'>('analyze')
   const [emailVerificationMessage, setEmailVerificationMessage] = useState<string | null>(null)
 
@@ -62,28 +60,6 @@ function App() {
 
     handleAuthStateChange()
   }, [])
-
-  // Handle payment success redirect
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const paymentId = urlParams.get('payment_id')
-    const paymentStatus = urlParams.get('payment_status')
-    const paymentRequestId = urlParams.get('payment_request_id')
-
-    if (paymentId && paymentStatus && paymentRequestId) {
-      // Clear URL parameters
-      window.history.replaceState({}, document.title, window.location.pathname)
-      
-      if (paymentStatus === 'Credit') {
-        // Payment successful - refresh credits
-        refreshCredits()
-        alert('Payment successful! Your credits have been added to your account.')
-      } else {
-        // Payment failed
-        alert('Payment was not successful. Please try again.')
-      }
-    }
-  }, [refreshCredits])
 
   const handleFileUploaded = async (uploadedDocument: PRDDocument) => {
     setDocument(uploadedDocument)
@@ -121,7 +97,7 @@ function App() {
     const hasEnoughCredits = credits && credits.credits >= 1
     if (!hasEnoughCredits) {
       setShowAnalysisConfirm(false)
-      setShowPaymentModal(true)
+      alert('You need at least 1 credit to perform an analysis. Please contact support for more credits.')
       return
     }
 
@@ -185,11 +161,6 @@ function App() {
 
   const handleUserMenuNavigate = (view: 'history') => {
     setCurrentView(view)
-  }
-
-  const handlePaymentSuccess = () => {
-    refreshCredits()
-    setShowPaymentModal(false)
   }
 
   const canAnalyze = document && !isProcessing && user && credits && credits.credits >= 1
@@ -625,7 +596,7 @@ function App() {
               <CreditDisplay 
                 credits={credits} 
                 loading={creditsLoading} 
-                onBuyCredits={() => setShowPaymentModal(true)}
+                showBuyButton={false}
                 size="medium"
               />
               <UserMenu onNavigate={handleUserMenuNavigate} />
@@ -756,19 +727,8 @@ function App() {
         isOpen={showAnalysisConfirm}
         onClose={() => setShowAnalysisConfirm(false)}
         onConfirm={handleAnalyzeConfirm}
-        onBuyCredits={() => {
-          setShowAnalysisConfirm(false)
-          setShowPaymentModal(true)
-        }}
         documentName={document?.name || ''}
         credits={credits}
-      />
-
-      {/* Payment Modal */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        onSuccess={handlePaymentSuccess}
       />
     </div>
   )

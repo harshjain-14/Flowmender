@@ -1,11 +1,10 @@
 import React from 'react';
-import { CreditCard, Plus, Zap } from 'lucide-react';
+import { CreditCard, Zap } from 'lucide-react';
 import { UserCredits } from '../types';
 
 interface CreditDisplayProps {
   credits: UserCredits | null;
   loading: boolean;
-  onBuyCredits?: () => void;
   showBuyButton?: boolean;
   size?: 'small' | 'medium' | 'large';
 }
@@ -13,8 +12,7 @@ interface CreditDisplayProps {
 export const CreditDisplay: React.FC<CreditDisplayProps> = ({
   credits,
   loading,
-  onBuyCredits,
-  showBuyButton = true,
+  showBuyButton = false,
   size = 'medium'
 }) => {
   if (loading) {
@@ -60,16 +58,6 @@ export const CreditDisplay: React.FC<CreditDisplayProps> = ({
           </span>
         )}
       </div>
-
-      {showBuyButton && (isLowCredits || size === 'large') && (
-        <button
-          onClick={onBuyCredits}
-          className={`flex items-center ${sizeClasses[size]} bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium`}
-        >
-          <Plus className={`${iconSizes[size]} mr-1`} />
-          {size === 'small' ? 'Buy' : 'Buy Credits'}
-        </button>
-      )}
 
       {isOutOfCredits && (
         <div className={`flex items-center ${sizeClasses[size]} bg-red-100 text-red-700 rounded-lg border border-red-200`}>

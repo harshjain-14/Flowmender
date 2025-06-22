@@ -1,12 +1,11 @@
 import React from 'react'
-import { X, AlertTriangle, Zap, CreditCard, Plus } from 'lucide-react'
+import { X, AlertTriangle, Zap, CreditCard } from 'lucide-react'
 import { UserCredits } from '../types'
 
 interface AnalysisConfirmModalProps {
   isOpen: boolean
   onClose: () => void
   onConfirm: () => void
-  onBuyCredits?: () => void
   documentName: string
   credits: UserCredits | null
 }
@@ -15,7 +14,6 @@ export const AnalysisConfirmModal: React.FC<AnalysisConfirmModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  onBuyCredits,
   documentName,
   credits
 }) => {
@@ -85,7 +83,7 @@ export const AnalysisConfirmModal: React.FC<AnalysisConfirmModalProps> = ({
                   <div>
                     <h4 className="font-medium text-red-900">No Credits Available</h4>
                     <p className="text-sm text-red-700 mt-1">
-                      You need at least 1 credit to perform an analysis. Purchase more credits to continue.
+                      You need at least 1 credit to perform an analysis. Please contact support for more credits.
                     </p>
                   </div>
                 </div>
@@ -116,11 +114,10 @@ export const AnalysisConfirmModal: React.FC<AnalysisConfirmModalProps> = ({
             </button>
           ) : (
             <button
-              onClick={onBuyCredits}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium flex items-center justify-center"
+              disabled
+              className="w-full bg-gray-300 text-gray-500 py-3 px-4 rounded-lg cursor-not-allowed font-medium"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Buy Credits
+              Insufficient Credits
             </button>
           )}
           
@@ -135,7 +132,7 @@ export const AnalysisConfirmModal: React.FC<AnalysisConfirmModalProps> = ({
         {hasEnoughCredits && (
           <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
             <p className="text-xs text-gray-600">
-              💡 Need more analyses? Get 3 credits for ₹89 or save with larger packages.
+              💡 FlowMender is currently free to use. Enjoy comprehensive PRD analysis at no cost!
             </p>
           </div>
         )}
