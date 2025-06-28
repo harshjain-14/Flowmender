@@ -1,6 +1,3 @@
-Here's the fixed version with all missing closing brackets added:
-
-```javascript
 import React, { useState, useEffect } from 'react'
 import { Brain, Zap, LogIn, FileText, Users, Shield, CheckCircle, ArrowRight, Star, TrendingUp, Clock, Target, Mail, AlertTriangle, ExternalLink } from 'lucide-react'
 import { FileUpload } from './components/FileUpload'
@@ -560,4 +557,196 @@ function App() {
                     <Clock className="h-5 w-5 sm:h-6 sm:w-6" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-2 text-sm sm:text-base">Ship
+                    <h4 className="font-semibold mb-2 text-sm sm:text-base">Ship Products 3x Faster</h4>
+                    <p className="text-blue-100 text-xs sm:text-sm">Eliminate weeks of back-and-forth by identifying issues during the planning phase.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4 sm:space-y-6">
+                <div className="flex items-start">
+                  <div className="bg-white bg-opacity-20 p-2 rounded-lg mr-3 sm:mr-4 mt-1">
+                    <Target className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2 text-sm sm:text-base">Improve User Experience</h4>
+                    <p className="text-blue-100 text-xs sm:text-sm">Ensure every user journey is smooth and every edge case is handled gracefully.</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="bg-white bg-opacity-20 p-2 rounded-lg mr-3 sm:mr-4 mt-1">
+                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2 text-sm sm:text-base">Launch with Confidence</h4>
+                    <p className="text-blue-100 text-xs sm:text-sm">Know that your product is thoroughly analyzed and ready for real-world usage.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Section */}
+          <div className="text-center">
+            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">
+              Ready to Build Better Products?
+            </h3>
+            <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto">
+              Join hundreds of product teams who trust FlowMender to catch critical issues before they impact users.
+            </p>
+            <button
+              onClick={() => {
+                setShowAuthModal(true)
+                AnalyticsService.trackUserAction('auth_modal_opened', { source: 'bottom_cta' })
+              }}
+              className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 font-medium text-base sm:text-lg shadow-lg"
+            >
+              <Brain className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
+              Start Your Free Analysis
+              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
+            </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="bg-gray-900 text-white py-8 sm:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-4">
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-xl mr-3">
+                  <Brain className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-xl font-bold">FlowMender</span>
+              </div>
+              <p className="text-gray-400 text-sm sm:text-base mb-4">
+                AI-powered PRD analysis that catches what humans miss
+              </p>
+              <div className="text-xs sm:text-sm text-gray-500">
+                © 2025 FlowMender. Built with Google Gemini AI.
+              </div>
+            </div>
+          </div>
+        </footer>
+
+        {/* Auth Modal */}
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)} 
+        />
+      </div>
+    )
+  }
+
+  // Main application for authenticated users
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Email verification success message */}
+      {emailVerificationMessage && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 text-center">
+          <div className="flex items-center justify-center">
+            <CheckCircle className="h-5 w-5 mr-2" />
+            {emailVerificationMessage}
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 sm:p-3 rounded-xl mr-3 sm:mr-4">
+                <Brain className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">FlowMender</h1>
+                <p className="text-gray-600 text-xs sm:text-sm lg:text-base">AI-powered PRD analysis</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <CreditDisplay credits={credits} loading={creditsLoading} />
+              <UserMenu user={user} onNavigate={handleUserMenuNavigate} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {currentView === 'history' ? (
+          <AnalysisHistory onAnalysisSelect={handleAnalysisSelect} />
+        ) : (
+          <div className="space-y-6 sm:space-y-8">
+            {/* File Upload Section */}
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-100">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Upload Your PRD</h2>
+              <FileUpload onFileUploaded={handleFileUploaded} />
+            </div>
+
+            {/* Context Form Section */}
+            {document && (
+              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-100">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Additional Context (Optional)</h2>
+                <ContextForm onContextUpdate={handleContextUpdate} />
+              </div>
+            )}
+
+            {/* Analysis Button */}
+            {document && (
+              <div className="text-center">
+                <button
+                  onClick={handleAnalyzeClick}
+                  disabled={!canAnalyze}
+                  className={`inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-medium text-base sm:text-lg transition-all transform ${
+                    canAnalyze
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:scale-105 shadow-lg'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  <Brain className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
+                  {isProcessing ? 'Analyzing...' : 'Analyze PRD (1 Credit)'}
+                  {!isProcessing && <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />}
+                </button>
+                {!canAnalyze && !isProcessing && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    {!user ? 'Please sign in to analyze' : 
+                     !credits || credits.credits < 1 ? 'Insufficient credits' : 
+                     'Upload a document to analyze'}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Processing Status */}
+            {isProcessing && (
+              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-100">
+                <ProcessingStatus status={processingStatus} />
+              </div>
+            )}
+
+            {/* Results */}
+            {analysisResult && !isProcessing && (
+              <div className="space-y-6 sm:space-y-8">
+                <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-100">
+                  <ResultsViewer result={analysisResult} />
+                </div>
+                <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-100">
+                  <ExportOptions result={analysisResult} />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Analysis Confirmation Modal */}
+      <AnalysisConfirmModal
+        isOpen={showAnalysisConfirm}
+        onClose={() => setShowAnalysisConfirm(false)}
+        onConfirm={handleAnalyzeConfirm}
+        credits={credits}
+      />
+    </div>
+  )
+}
+
+export default App
