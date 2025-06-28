@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Brain, Zap, LogIn, FileText, Users, Shield, CheckCircle, ArrowRight, Star, TrendingUp, Clock, Target, Mail, AlertTriangle } from 'lucide-react'
+import { Brain, Zap, LogIn, FileText, Users, Shield, CheckCircle, ArrowRight, Star, TrendingUp, Clock, Target, Mail, AlertTriangle, ExternalLink } from 'lucide-react'
 import { FileUpload } from './components/FileUpload'
 import { ContextForm } from './components/ContextForm'
 import { ProcessingStatus } from './components/ProcessingStatus'
@@ -642,6 +642,29 @@ function App() {
           </div>
         </div>
 
+        {/* Footer with Built with Bolt Badge */}
+        <footer className="bg-white border-t border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between">
+              <div className="text-sm text-gray-500 mb-4 sm:mb-0">
+                © 2025 FlowMender. All rights reserved.
+              </div>
+              <div className="flex items-center space-x-4">
+                <a
+                  href="https://bolt.new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs font-medium rounded-full hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-sm"
+                >
+                  <Zap className="h-3 w-3 mr-1" />
+                  Built with Bolt
+                  <ExternalLink className="h-3 w-3 ml-1" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </footer>
+
         {/* Auth Modal */}
         <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       </div>
@@ -819,6 +842,28 @@ function App() {
           <AnalysisHistory onAnalysisSelect={handleAnalysisSelect} />
         )}
       </div>
+
+      {/* Footer with Built with Bolt Badge */}
+      <footer className="bg-white border-t border-gray-200 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between">
+            <div className="text-sm text-gray-500 mb-4 sm:mb-0">
+              © 2025 FlowMender. All rights reserved.
+            </div>
+            <div className="flex items-center space-x-4">
+              <a
+                href="https://bolt.new"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs font-medium rounded-full hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-sm"
+              >
+                <Zap className="h-3 w-3 mr-1" />
+                Built with Bolt
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </a>
+            </div>
+          </div>
+        </footer>
 
       {/* Analysis Confirmation Modal */}
       <AnalysisConfirmModal
