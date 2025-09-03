@@ -215,11 +215,11 @@ PRD Document:
 ${content}
 
 INSTRUCTIONS:
-1. Only extract journeys that are actually mentioned or clearly implied in the PRD
+1. Only extract journeys that are actually mentioned or clearly implied in the PRD, but your job is to think of journeys that were missed
 2. Focus on the core flows that users will actually go through
 3. Be specific about what the PRD says vs what's missing
 4. Don't invent features or flows not mentioned
-5. Extract atleast 3 different user journeys
+5. IMP: Extract atleast 3 different user journeys
 
 For each journey, extract:
 - What the user is trying to accomplish
@@ -231,6 +231,25 @@ Return JSON array:
 [
   {
     "id": "journey_1",
+    "name": "Clear, specific journey name",
+    "description": "What this journey accomplishes for the user",
+    "userType": "Who performs this journey",
+    "priority": "high|medium|low",
+    "steps": [
+      {
+        "id": "step_1",
+        "action": "Specific action the user takes",
+        "description": "What happens in this step",
+        "prdClarity": "clear|unclear|missing",
+        "gaps": ["Specific things that are unclear or missing"]
+      }
+    ],
+    "criticalQuestions": [
+      "Specific questions about this journey that the PRD doesn't answer"
+    ]
+  }
+  {
+    "id": "journey_2",
     "name": "Clear, specific journey name",
     "description": "What this journey accomplishes for the user",
     "userType": "Who performs this journey",
