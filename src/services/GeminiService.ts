@@ -207,6 +207,8 @@ Return ONLY this JSON:
     ].filter(Boolean).join('\n');
 
     const prompt = `
+CRITICAL REQUIREMENT: You MUST identify exactly 3-5 user journeys. Do not provide fewer than 3 journeys under any circumstances.
+
 Read this PRD and identify the 3-5 most important user journeys that are actually described or clearly implied.
 
 ${contextInfo ? `Context:\n${contextInfo}\n` : ''}
@@ -214,12 +216,13 @@ ${contextInfo ? `Context:\n${contextInfo}\n` : ''}
 PRD Document:
 ${content}
 
-INSTRUCTIONS:
-1. Only extract journeys that are actually mentioned or clearly implied in the PRD, but your job is to think of journeys that were missed
-2. Focus on the core flows that users will actually go through
-3. Be specific about what the PRD says vs what's missing
-4. Don't invent features or flows not mentioned
-5. IMP: Extract atleast 3 different user journeys
+MANDATORY INSTRUCTIONS:
+1. MUST extract AT LEAST 3 different user journeys - this is non-negotiable
+2. Only extract journeys that are actually mentioned or clearly implied in the PRD
+3. Focus on the core flows that users will actually go through
+4. Be specific about what the PRD says vs what's missing
+5. Don't invent features or flows not mentioned
+6. If you can't find 3 distinct journeys, look for variations or different user types performing similar flows
 
 For each journey, extract:
 - What the user is trying to accomplish
@@ -227,7 +230,7 @@ For each journey, extract:
 - Where the PRD is unclear or missing important details
 - Critical decision points or branching logic
 
-Return JSON array:
+Return a JSON array with exactly 3-5 journeys in this format:
 [
   {
     "id": "journey_1",
@@ -247,9 +250,28 @@ Return JSON array:
     "criticalQuestions": [
       "Specific questions about this journey that the PRD doesn't answer"
     ]
-  }
+  },
   {
     "id": "journey_2",
+    "name": "Clear, specific journey name",
+    "description": "What this journey accomplishes for the user",
+    "userType": "Who performs this journey",
+    "priority": "high|medium|low",
+    "steps": [
+      {
+        "id": "step_1",
+        "action": "Specific action the user takes",
+        "description": "What happens in this step",
+        "prdClarity": "clear|unclear|missing",
+        "gaps": ["Specific things that are unclear or missing"]
+      }
+    ],
+    "criticalQuestions": [
+      "Specific questions about this journey that the PRD doesn't answer"
+    ]
+  },
+  {
+    "id": "journey_3",
     "name": "Clear, specific journey name",
     "description": "What this journey accomplishes for the user",
     "userType": "Who performs this journey",
@@ -269,6 +291,8 @@ Return JSON array:
   }
 ]
 
+VALIDATION: Before returning, verify your JSON array contains AT LEAST 3 journey objects. If not, add more journeys.
+
 Return ONLY the JSON array.
 `;
 
@@ -277,9 +301,46 @@ Return ONLY the JSON array.
       const response = await result.response;
       const text = response.text();
       
+      console.log('Raw AI Response:', text); // Debug logging
+      
+      // More robust JSON extraction
       const jsonMatch = text.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+        console.log('Extracted JSON:', jsonMatch[0]); // Debug logging
+        const parsed = JSON.parse(jsonMatch[0]);
+        
+        // Validation: Ensure we have at least 3 journeys
+        if (!Array.isArray(parsed) || parsed.length < 3) {
+          console.warn(`AI returned ${parsed?.length || 0} journeys, retrying...`);
+          
+          // Retry with even more explicit instructions
+          const retryPrompt = `
+The previous response had ${parsed?.length || 0} journeys but we need AT LEAST 3.
+
+MANDATORY: Return exactly 3 user journeys minimum for this PRD:
+
+${content.substring(0, 2000)}...
+
+Even if some journeys are similar, create 3 distinct journey objects. Look for:
+1. Different user types (admin vs end user)
+2. Different scenarios (happy path vs error cases)  
+3. Different features or flows mentioned in the PRD
+
+Return ONLY a JSON array with 3+ journey objects in the exact format specified above.
+`;
+          
+          const retryResult = await this.model.generateContent(retryPrompt);
+          const retryResponse = await retryResult.response;
+          const retryText = retryResponse.text();
+          
+          const retryJsonMatch = retryText.match(/\[[\s\S]*\]/);
+          if (retryJsonMatch) {
+            const retryParsed = JSON.parse(retryJsonMatch[0]);
+            return Array.isArray(retryParsed) ? retryParsed : [retryParsed];
+          }
+        }
+        
+        return Array.isArray(parsed) ? parsed : [parsed];
       }
       
       throw new Error('Could not parse journeys from AI response');
