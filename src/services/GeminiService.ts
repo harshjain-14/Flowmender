@@ -219,6 +219,7 @@ INSTRUCTIONS:
 2. Focus on the core flows that users will actually go through
 3. Be specific about what the PRD says vs what's missing
 4. Don't invent features or flows not mentioned
+5. Extract atleast 3 different user journeys
 
 For each journey, extract:
 - What the user is trying to accomplish
